@@ -206,3 +206,76 @@ white_wine |>
   facet_wrap(vars(`alcohol category`))
 ```
 
+## Aggregation functions
+A.k.a summary functions
+
+- Starndard statistics: `max()`, `min()`, `median()`, `mean()`, etc...
+- Logical operations: `any()` and `all()`
+- Counts and ranks: `n()`
+
+### Simply summary use
+Based on the `summarise()`
+
+```{r}
+white_wine |> summarise(median(alcohol),sd(alcohol))
+
+white_wine |> 
+  select(alcohol) |>
+  mutate(a_m_median = alcohol - median(alcohol), .keep = "none")
+
+white_wine |> 
+  summarise(mean(alcohol),sd(alcohol),median(alcohol),IQR(alcohol))
+
+white_wine <- white_wine |> mutate(id = row_number())
+white_wine2 <- white_wine |> select(id, alcohol) |> rename(alcohol2 = alcohol)
+
+white_wine3 <- left_join(white_wine,white_wine2)
+
+```
+
+## More complex summary functions 
+Essentially `quantile()`
+
+```{r}
+quantile(white_wine$`residual sugar`, probs = seq(0,1,0.1))
+```
+
+```{r}
+mean(white_wine$`residual sugar`)
+```
+
+```{r}
+white_wine |> summarise(quantile(`residual sugar`))
+
+white_wine |> reframe(quantile(`residual sugar`), mean(`residual sugar`))
+```
+```{r}
+sugar_stats <- white_wine |>
+  summarise(list(quantile(`residual sugar`)),
+            mean(`residual sugar`))
+```
+
+#group by
+```{r}
+white_wine |>
+  summarise(median(`residual sugar`),
+            n(),
+            .by = quality)
+```
+
+```{r}
+white_wine |>
+  mutate( ha = alcohol >= 12.5) |>
+  summarise(median(`residual sugar`),
+                   n(),
+                   .by = ha)
+```
+```{r}
+white_wine |>
+  mutate(class = cut(alcohol, breaks = c(7,9,10,12,13,15))) |>
+  summarise(median(`residual sugar`),
+                   n(),
+                   .by = class)
+```
+
+
