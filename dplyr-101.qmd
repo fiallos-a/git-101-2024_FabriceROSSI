@@ -376,3 +376,74 @@ diamonds |>
   ungroup()
 ```
 
+### Tidying data 
+
+```{r}
+library(tidyr)
+```
+
+```{r}
+color_given_cut <- diamonds |>
+  group_by(cut,color) |>
+  summarise(N=n(), .groups = "drop_last") |>
+  mutate(prob =N/sum(N)) |>
+  ungroup()
+```
+
+```{r}
+color_given_cut |>
+  select(-N) |>
+  pivot_wider(id_cols = cut,
+              names_from = color,
+              values_from = prob)
+```
+```{r}
+color_given_cut |>
+  select(-prob) |>
+  slice_sample(n = 30) |>
+  pivot_wider(names_from = color,
+              values_from = N)
+```
+### Wide to long table
+
+```{r}
+data("world_bank_pop")
+
+world_bank_pop |> filter(indicator == "SP.POP.TOTL") |> 
+  select(-indicator) |>
+  pivot_longer(cols = -country, names_to = "year", values_to = "population") |>
+  filter(country %in% c("FRA","ESP")) |>
+  ggplot(aes(x=as.numeric(year),y=population,color = country)) +
+  geom_line()
+```
+
+
+```{r}
+world_bank_pop |> 
+  filter(country %in% c("FRA","ESP")) |>
+  pivot_longer(!country & !indicator)
+```
+
+```{r}
+
+options(scipen = 999)
+
+world_bank_pop |> 
+  pivot_longer(cols = !country & !indicator , names_to = "year", values_to = "value") |>
+  filter(country %in% c("FRA","ESP","DEU")) |>
+  ggplot(aes(x=as.numeric(year),y=value,color = country)) +
+  geom_line()+
+  facet_wrap(~indicator, scales = "free")
+```
+
+
+```{r}
+set.seed(42) #select the start of the randomness and makes sure that the same random numbers are produced all the time
+world_bank_pop |> 
+  pivot_longer(cols = !country & !indicator , names_to = "year", values_to = "value") |>
+  filter(country %in% c("FRA","ESP","DEU")) |>
+  ggplot(aes(x=as.numeric(year),y=value,color = country)) +
+  geom_line()+
+  facet_wrap(~indicator, scales = "free")
+```
+
