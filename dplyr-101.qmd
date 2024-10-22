@@ -1,6 +1,6 @@
 ---
 title: "Dplyr 101"
-author: "Fabrice Rossi"
+author: "Andres Fiallos"
 format: 
   html:
     code-fold: true
@@ -277,5 +277,102 @@ white_wine |>
                    n(),
                    .by = class)
 ```
+```{r}
+ggplot(white_wine,aes(x=alcohol,y=quality))+
+  geom_boxplot()
+```
+```{r}
+white_wine |>
+  mutate(alcohol_class = cut(alcohol, breaks = c(7,9,10,12,13,15),
+                             ordered_result = T)) |>
+ggplot(aes(x=alcohol_class, fill = quality)) +
+  geom_bar(position = "fill")
+```
+```{r}
+white_wine |> pull(alcohol) |> quantile(probs = seq(0,1, by = 0.2))
+```
+```{r}
+alcohol_quantiles <- 
+  white_wine |> 
+  pull(alcohol) |> 
+  quantile(probs = seq(0,1, by = 0.2))
 
+alcohol_quantiles 
+
+#I will modify the first element
+alcohol_quantiles[1] <- alcohol_quantiles[1] - 1
+alcohol_quantiles 
+
+white_wine |>
+  mutate(alcohol_class = cut(alcohol, breaks = alcohol_quantiles,
+                             ordered_result = T)) |>
+ggplot(aes(x=alcohol_class)) +
+  geom_bar()
+
+```
+
+#### Functions with a .by parameter
+
+Some dplyr verbs support the `.by` parameter:
+
+- `summarise()`
+- `mutate()`
+- `slice()`
+- `filter()`
+- `reframe()`
+
+Some dplyr verbs support the `by` parameter:
+
+- `slice_*()`
+
+```{r}
+white_wine |> 
+  select(1:2) |> # first 2 columns
+  slice(1:5) ##first 5 rows
+```
+```{r}
+white_wine |> 
+  slice(1:5, .by = quality) |> ##first 5 rows
+  select(1:2 | quality) # first 2 columns
+  
+```
+
+```{r}
+white_wine |> 
+  slice_sample(n=1, by = quality) |> ##first 5 rows
+  select(1:2 | quality) # first 2 columns
+```
+```{r}
+white_wine |> 
+  slice_max(alcohol, by = quality) |> ##first 5 rows
+  select(1:2 | quality) # first 2 columns
+```
+```{r}
+white_wine |> mutate(avg_alcohol_quality = mean(alcohol), .by = quality)
+```
+
+### `group_by()`
+
+```{r}
+white_wine |> group_by(quality)
+```
+```{r}
+diamonds |>
+  group_by(cut,clarity) |>
+  summarise(median(price), .groups = "drop_last")
+```
+```{r}
+diamonds |>
+  group_by(cut,color) |>
+  summarise(N=n(), .groups = "drop_last") |>
+  mutate(prob =N/sum(N)) |>
+  ungroup()
+```
+
+```{r}
+diamonds |>
+  summarise(N=n(), .by=c(cut,color)) |>
+  mutate(prob =N/sum(N), ,by = cut) |>
+  ungroup()
+```
 
